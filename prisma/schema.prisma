@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Location {
+  id                      String    @id @default(cuid())
+  name                    String
+  timezone                String    @default("Australia/Melbourne")
+  auth_mode               String    @default("private") // "oauth" | "private"
+  token_encrypted         String    @db.NVarChar(Max)
+  refresh_token_encrypted String?   @db.NVarChar(Max)
+  token_expires_at        DateTime? @db.DateTimeOffset
+  connected_at            DateTime  @default(now()) @db.DateTimeOffset
+  settings_json           String?   @db.NVarChar(Max) // StatusMapping + segmentation config
+
+  calendars      Calendar[]
+  contacts       Contact[]
+  events         AppointmentEvent[]
+  checkpoints    SyncCheckpoint[]
+  jobs           Job[]
+  rateLimitState RateLimitState?
+
+  @@map("Location")
+}
+
+model Calendar {
+  id          String  @id @default(cuid())
+  location_id String
+  ghl_id      String
+  name        String
+  is_active   Boolean @default(true)
+  raw_json    String  @db.NVarChar(Max)
+
+  location    Location           @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  events      AppointmentEvent[]
+  checkpoints SyncCheckpoint[]
+
+  @@unique([location_id, ghl_id])
+  @@map("Calendar")
+}
+
+model Contact {
+  id                 String   @id @default(cuid())
+  location_id        String
+  ghl_id             String
+  name               String?
+  email              String?
+  phone              String?
+  tags_json          String?  @db.NVarChar(Max)
+  custom_fields_json String?  @db.NVarChar(Max)
+  raw_json           String   @db.NVarChar(Max)
+  updated_at         DateTime @updatedAt @db.DateTimeOffset
+
+  location Location           @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  events   AppointmentEvent[]
+
+  @@unique([location_id, ghl_id])
+  @@index([location_id, email])
+  @@map("Contact")
+}
+
+model AppointmentEvent {
+  id           String    @id @default(cuid())
+  ghl_event_id String    @unique
+  location_id  String
+  calendar_id  String?
+  contact_id   String?
+  start_at     DateTime  @db.DateTimeOffset
+  end_at       DateTime? @db.DateTimeOffset
+  booked_at    DateTime? @db.DateTimeOffset
+  status_raw   String
+  status_norm  String    // ATTENDED | NO_SHOW | CANCELLED | BOOKED | OTHER
+  raw_json     String    @db.NVarChar(Max)
+
+  location Location  @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  calendar Calendar? @relation(fields: [calendar_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contact  Contact?  @relation(fields: [contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([location_id, start_at])
+  @@index([location_id, status_norm])
+  @@index([contact_id])
+  @@map("AppointmentEvent")
+}
+
+model SyncCheckpoint {
+  id              String    @id @default(cuid())
+  location_id     String
+  calendar_id     String
+  window_start    DateTime  @db.DateTimeOffset
+  window_end      DateTime  @db.DateTimeOffset
+  last_success_at DateTime? @db.DateTimeOffset
+  last_error      String?   @db.NVarChar(Max)
+  updated_at      DateTime  @updatedAt @db.DateTimeOffset
+
+  location Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  calendar Calendar @relation(fields: [calendar_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([location_id, calendar_id, window_start])
+  @@map("SyncCheckpoint")
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  type         String    // SYNC_BACKFILL | SYNC_INCREMENTAL | TAG_COHORT
+  location_id  String
+  payload_json String    @db.NVarChar(Max)
+  status       String    @default("QUEUED") // QUEUED | RUNNING | SUCCEEDED | FAILED
+  attempts     Int       @default(0)
+  next_run_at  DateTime  @default(now()) @db.DateTimeOffset
+  last_error   String?   @db.NVarChar(Max)
+  created_at   DateTime  @default(now()) @db.DateTimeOffset
+  updated_at   DateTime  @updatedAt @db.DateTimeOffset
+
+  location Location       @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  results  TagJobResult[]
+
+  @@index([status, next_run_at])
+  @@map("Job")
+}
+
+model TagJobResult {
+  id                 String  @id @default(cuid())
+  job_id             String
+  tag_name           String
+  action             String  // "add" | "remove"
+  contacts_targeted  Int     @default(0)
+  contacts_succeeded Int     @default(0)
+  contacts_failed    Int     @default(0)
+  failures_json      String? @db.NVarChar(Max)
+
+  job Job @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@map("TagJobResult")
+}
+
+model RateLimitState {
+  id                 String   @id @default(cuid())
+  location_id        String   @unique
+  window_started_at  DateTime @db.DateTimeOffset
+  requests_in_window Int      @default(0)
+  updated_at         DateTime @updatedAt @db.DateTimeOffset
+
+  location Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  @@map("RateLimitState")
+}
