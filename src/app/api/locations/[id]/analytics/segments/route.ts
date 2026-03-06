@@ -12,8 +12,8 @@ const QuerySchema = z.object({
   segmentValue: z.string().optional(),
 });
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
   const location = await prisma.location.findUnique({ where: { id }, select: { id: true } });
   if (!location) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

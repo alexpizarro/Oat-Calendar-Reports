@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { DEFAULT_STATUS_MAPPINGS } from '@/types/api';
@@ -8,8 +8,15 @@ import type { StatusNorm, LocationSettings } from '@/types/api';
 
 const STATUS_NORMS: StatusNorm[] = ['ATTENDED', 'NO_SHOW', 'CANCELLED', 'BOOKED', 'OTHER'];
 
-export default function SettingsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+interface Calendar {
+  id: string;
+  ghl_id: string;
+  name: string;
+  is_active: boolean;
+}
+
+export default function SettingsPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [settings, setSettings] = useState<LocationSettings>({
     statusMappings: { ...DEFAULT_STATUS_MAPPINGS },
     defaultBackfillMonths: 12,
@@ -17,11 +24,14 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
     segmentationField: 'email_domain',
   });
   const [timezone, setTimezone] = useState('Australia/Melbourne');
+  const [ghlLocationId, setGhlLocationId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [newRaw, setNewRaw] = useState('');
   const [newNorm, setNewNorm] = useState<StatusNorm>('OTHER');
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
+  const [syncingCalendars, setSyncingCalendars] = useState(false);
 
   useEffect(() => {
     fetch(`/api/locations/${id}`)
@@ -29,16 +39,29 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
       .then(data => {
         if (data.settings) setSettings(data.settings);
         if (data.timezone) setTimezone(data.timezone);
+        if (data.ghlLocationId) setGhlLocationId(data.ghlLocationId);
         setLoading(false);
       });
+    fetch(`/api/locations/${id}/calendars`)
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setCalendars(data); });
   }, [id]);
+
+  async function handleSyncCalendars() {
+    setSyncingCalendars(true);
+    const res = await fetch(`/api/locations/${id}/calendars`, { method: 'POST' });
+    const data = await res.json();
+    if (Array.isArray(data)) setCalendars(data);
+    setSyncingCalendars(false);
+  }
+
 
   async function handleSave() {
     setSaving(true);
     await fetch(`/api/locations/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timezone, settings }),
+      body: JSON.stringify({ timezone, ghlLocationId, settings }),
     });
     setSaving(false);
     setSaved(true);
@@ -74,6 +97,12 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
             <label className="label">Timezone</label>
             <input className="input" value={timezone} onChange={e => setTimezone(e.target.value)} />
             <p className="text-xs text-gray-400 mt-1">IANA timezone name (e.g. Australia/Melbourne)</p>
+          </div>
+          <div>
+            <label className="label">GHL Location ID</label>
+            <input className="input" value={ghlLocationId} onChange={e => setGhlLocationId(e.target.value)}
+              placeholder="e.g. ve9EPM428h8vShlRW1KT" />
+            <p className="text-xs text-gray-400 mt-1">Found in your GHL sub-account URL (required for API calls)</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -126,6 +155,31 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
           </div>
           <button className="btn-secondary" onClick={addMapping}>Add</button>
         </div>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Calendars</CardTitle>
+            <button className="btn-secondary text-sm" onClick={handleSyncCalendars} disabled={syncingCalendars}>
+              {syncingCalendars ? <Spinner size="sm" /> : 'Sync from GHL'}
+            </button>
+          </div>
+        </CardHeader>
+        {calendars.length === 0 ? (
+          <p className="text-sm text-gray-500 py-2">No calendars synced yet. Click "Sync from GHL" to fetch them.</p>
+        ) : (
+          <div className="space-y-1">
+            {calendars.map(cal => (
+              <div key={cal.id} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50">
+                <span className="text-gray-800">{cal.name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${cal.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {cal.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <div className="flex justify-end gap-3">

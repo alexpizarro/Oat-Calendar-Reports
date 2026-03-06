@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { name, timezone, authMode, privateToken } = parsed.data;
+  const { name, timezone, authMode, privateToken, ghlLocationId } = parsed.data;
 
   if (authMode === 'private') {
     if (!privateToken) {
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
         timezone,
         auth_mode: 'private',
         token_encrypted: encrypt(privateToken),
+        ghl_location_id: ghlLocationId ?? null,
       },
       select: { id: true, name: true, timezone: true, auth_mode: true, connected_at: true },
     });

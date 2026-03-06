@@ -4,8 +4,8 @@ import { enqueueBackfill, enqueueIncremental } from '@/lib/jobs/enqueue';
 import { SyncEnqueueSchema } from '@/types/api';
 import { parseLocationSettings } from '@/lib/status-mapping';
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
 
   const jobs = await prisma.job.findMany({
     where: { location_id: id },
@@ -35,8 +35,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(jobs);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
 
   const location = await prisma.location.findUnique({
     where: { id },

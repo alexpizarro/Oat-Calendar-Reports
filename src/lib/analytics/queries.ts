@@ -86,7 +86,7 @@ export async function queryTrend(
     }>>`
       SELECT
         CONVERT(VARCHAR(10),
-          CAST(ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz} AS DATE),
+          CAST(ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)} AS DATE),
           120
         ) AS d,
         ae.status_norm,
@@ -97,7 +97,7 @@ export async function queryTrend(
         AND ae.start_at < ${to}
         ${calFilter}
       GROUP BY
-        CAST(ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz} AS DATE),
+        CAST(ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)} AS DATE),
         ae.status_norm
       ORDER BY d
     `;
@@ -109,9 +109,9 @@ export async function queryTrend(
     }>>`
       SELECT
         CONCAT(
-          DATEPART(YEAR, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}),
+          DATEPART(YEAR, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}),
           '-W',
-          RIGHT('0' + CAST(DATEPART(ISO_WEEK, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}) AS VARCHAR), 2)
+          RIGHT('0' + CAST(DATEPART(ISO_WEEK, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}) AS VARCHAR), 2)
         ) AS d,
         ae.status_norm,
         COUNT(*) AS cnt
@@ -121,8 +121,8 @@ export async function queryTrend(
         AND ae.start_at < ${to}
         ${calFilter}
       GROUP BY
-        DATEPART(YEAR, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}),
-        DATEPART(ISO_WEEK, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}),
+        DATEPART(YEAR, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}),
+        DATEPART(ISO_WEEK, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}),
         ae.status_norm
       ORDER BY d
     `;
@@ -210,8 +210,8 @@ export async function queryHeatmap(
     day_of_week: number; hour_of_day: number; cnt: number;
   }>>`
     SELECT
-      DATEPART(WEEKDAY, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}) - 1 AS day_of_week,
-      DATEPART(HOUR,    ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}) AS hour_of_day,
+      DATEPART(WEEKDAY, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}) - 1 AS day_of_week,
+      DATEPART(HOUR,    ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}) AS hour_of_day,
       COUNT(*) AS cnt
     FROM AppointmentEvent ae
     WHERE ae.location_id = ${locationId}
@@ -219,8 +219,8 @@ export async function queryHeatmap(
       AND ae.start_at < ${to}
       ${calFilter}
     GROUP BY
-      DATEPART(WEEKDAY, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz}),
-      DATEPART(HOUR,    ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${tz})
+      DATEPART(WEEKDAY, ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}),
+      DATEPART(HOUR,    ae.start_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)})
   `;
 
   return rows.map(r => ({

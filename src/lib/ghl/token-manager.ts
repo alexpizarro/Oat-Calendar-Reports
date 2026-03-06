@@ -43,6 +43,14 @@ export async function getAccessToken(locationId: string): Promise<string> {
   return tokens.access_token;
 }
 
+export async function getGhlLocationId(locationId: string): Promise<string | null> {
+  const loc = await prisma.location.findUniqueOrThrow({
+    where: { id: locationId },
+    select: { ghl_location_id: true },
+  });
+  return loc.ghl_location_id;
+}
+
 async function refreshAccessToken(refreshToken: string): Promise<GHLTokenResponse> {
   const clientId = process.env.GHL_CLIENT_ID;
   const clientSecret = process.env.GHL_CLIENT_SECRET;

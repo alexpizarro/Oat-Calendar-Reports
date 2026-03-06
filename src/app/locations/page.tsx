@@ -21,6 +21,7 @@ function ConnectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState('Australia/Melbourne');
   const [token, setToken] = useState('');
+  const [ghlLocationId, setGhlLocationId] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,7 +38,7 @@ function ConnectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           name,
           timezone,
           authMode: mode,
-          ...(mode === 'private' ? { privateToken: token } : {}),
+          ...(mode === 'private' ? { privateToken: token, ghlLocationId: ghlLocationId || undefined } : {}),
         }),
       });
 
@@ -87,17 +88,29 @@ function ConnectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             </div>
           </div>
           {mode === 'private' && (
-            <div>
-              <label className="label">Private Integration Token</label>
-              <input
-                type="password"
-                className="input"
-                value={token}
-                onChange={e => setToken(e.target.value)}
-                placeholder="pit_…"
-                required
-              />
-            </div>
+            <>
+              <div>
+                <label className="label">Private Integration Token</label>
+                <input
+                  type="password"
+                  className="input"
+                  value={token}
+                  onChange={e => setToken(e.target.value)}
+                  placeholder="pit_…"
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">GHL Location ID</label>
+                <input
+                  className="input"
+                  value={ghlLocationId}
+                  onChange={e => setGhlLocationId(e.target.value)}
+                  placeholder="e.g. ve9EPM428h8vShlRW1KT"
+                />
+                <p className="text-xs text-gray-400 mt-1">Found in your GHL sub-account URL or Settings → Business Profile</p>
+              </div>
+            </>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 justify-end">

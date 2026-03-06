@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { use } from 'react';
 import { useFetch, defaultDateRange } from '@/hooks/use-analytics';
 import { SummaryCards } from '@/components/analytics/summary-cards';
 import { TrendChart } from '@/components/charts/trend-chart';
@@ -11,8 +10,8 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import type { SummaryMetrics, TrendPoint, CalendarPopularity, LeadTimeBucket } from '@/lib/analytics/types';
 
-export default function DashboardPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function DashboardPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [range, setRange] = useState(defaultDateRange);
   const [granularity, setGranularity] = useState<'daily' | 'weekly'>('daily');
 

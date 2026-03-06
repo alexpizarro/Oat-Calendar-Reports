@@ -7,9 +7,9 @@ export default async function LocationLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
   const location = await prisma.location.findUnique({
     where: { id },
     select: { id: true, name: true },

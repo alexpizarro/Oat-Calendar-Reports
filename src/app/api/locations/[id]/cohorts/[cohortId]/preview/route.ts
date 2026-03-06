@@ -3,10 +3,10 @@ import prisma from '@/lib/prisma';
 import { getMatchingContactIds } from '@/lib/jobs/tag-cohort';
 import { CohortRuleSchema } from '@/types/api';
 
-type Params = { params: Promise<{ id: string; cohortId: string }> };
+type Params = { params: { id: string; cohortId: string } };
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const { id, cohortId } = await params;
+  const { id, cohortId } = params;
   const location = await prisma.location.findUnique({ where: { id }, select: { id: true } });
   if (!location) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

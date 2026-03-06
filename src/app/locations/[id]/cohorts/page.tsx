@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { defaultDateRange } from '@/hooks/use-analytics';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -43,8 +43,8 @@ const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 
   QUEUED: 'warning',
 };
 
-export default function CohortsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function CohortsPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);

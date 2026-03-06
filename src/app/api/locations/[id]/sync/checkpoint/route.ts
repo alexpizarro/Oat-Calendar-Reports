@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
 
   const checkpoints = await prisma.syncCheckpoint.findMany({
     where: { location_id: id },

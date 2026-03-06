@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-type Params = { params: Promise<{ id: string; cohortId: string }> };
+type Params = { params: { id: string; cohortId: string } };
 
 function getCohorts(settingsJson: string | null) {
   if (!settingsJson) return [];
@@ -13,7 +13,7 @@ function getCohorts(settingsJson: string | null) {
 }
 
 export async function GET(_req: NextRequest, { params }: Params) {
-  const { id, cohortId } = await params;
+  const { id, cohortId } = params;
   const location = await prisma.location.findUnique({ where: { id }, select: { settings_json: true } });
   if (!location) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { id, cohortId } = await params;
+  const { id, cohortId } = params;
   const location = await prisma.location.findUnique({ where: { id }, select: { settings_json: true } });
   if (!location) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

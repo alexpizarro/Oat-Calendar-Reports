@@ -1,6 +1,6 @@
 import * as rateLimiter from './rate-limiter';
 import { RateLimitError } from './rate-limiter';
-import { getAccessToken } from './token-manager';
+import { getAccessToken, getGhlLocationId } from './token-manager';
 
 const GHL_BASE_URL = 'https://services.leadconnectorhq.com';
 const GHL_API_VERSION = '2021-07-28';
@@ -29,6 +29,8 @@ function calcBackoff(attempt: number): number {
 export class GHLClient {
   private locationId: string;
   private maxRetries: number;
+  private ghlLocationId: string | null = null;
+  private ghlLocationIdFetched = false;
 
   constructor(locationId: string, maxRetries = 3) {
     this.locationId = locationId;
@@ -43,6 +45,12 @@ export class GHLClient {
       body?: unknown;
     } = {},
   ): Promise<T> {
+    // Lazy-fetch the real GHL location ID once and cache it
+    if (!this.ghlLocationIdFetched) {
+      this.ghlLocationId = await getGhlLocationId(this.locationId);
+      this.ghlLocationIdFetched = true;
+    }
+
     let attempt = 0;
 
     while (true) {
@@ -52,12 +60,16 @@ export class GHLClient {
 
         const token = await getAccessToken(this.locationId);
 
+        // Merge params, auto-injecting locationId if available and not already set
+        const mergedParams: Record<string, string | number | boolean | undefined> = { ...options.params };
+        if (this.ghlLocationId && mergedParams.locationId === undefined) {
+          mergedParams.locationId = this.ghlLocationId;
+        }
+
         const url = new URL(GHL_BASE_URL + path);
-        if (options.params) {
-          for (const [k, v] of Object.entries(options.params)) {
-            if (v !== undefined && v !== null) {
-              url.searchParams.set(k, String(v));
-            }
+        for (const [k, v] of Object.entries(mergedParams)) {
+          if (v !== undefined && v !== null) {
+            url.searchParams.set(k, String(v));
           }
         }
 

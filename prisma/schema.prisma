@@ -17,6 +17,7 @@ model Location {
   token_expires_at        DateTime? @db.DateTimeOffset
   connected_at            DateTime  @default(now()) @db.DateTimeOffset
   settings_json           String?   @db.NVarChar(Max) // StatusMapping + segmentation config
+  ghl_location_id         String?   // GHL's own location identifier
 
   calendars      Calendar[]
   contacts       Contact[]

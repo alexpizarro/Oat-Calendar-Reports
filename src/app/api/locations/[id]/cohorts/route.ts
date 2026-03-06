@@ -5,8 +5,8 @@ import { CreateCohortSchema } from '@/types/api';
 // Cohorts are stored in Location.settings_json under "cohorts" key
 // Simple in-memory-style storage using JSON in settings
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
   const location = await prisma.location.findUnique({
     where: { id },
     select: { settings_json: true },
@@ -17,8 +17,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(settings.cohorts ?? []);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
   const location = await prisma.location.findUnique({
     where: { id },
     select: { settings_json: true },

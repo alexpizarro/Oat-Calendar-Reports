@@ -33,7 +33,7 @@ export async function runIncremental(payload: IncrementalPayload): Promise<void>
   for (const calendar of calendars) {
     try {
       const events = await fetchEventsInWindow(
-        client, calendar.ghl_id, locationId, fromDate, toDate,
+        client, calendar.ghl_id, fromDate, toDate,
       );
 
       await upsertEventsIncremental(events, locationId, calendar.id, statusMappings, client);

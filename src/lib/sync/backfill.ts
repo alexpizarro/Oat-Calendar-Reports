@@ -48,7 +48,7 @@ export async function runBackfill(jobId: string, payload: BackfillPayload): Prom
 
       try {
         const events = await fetchEventsInWindow(
-          client, calendar.ghl_id, locationId, windowStart, windowEnd,
+          client, calendar.ghl_id, windowStart, windowEnd,
         );
 
         await upsertEvents(events, locationId, calendar.id, statusMappings, client);

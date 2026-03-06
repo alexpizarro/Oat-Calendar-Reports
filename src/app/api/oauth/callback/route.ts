@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
       access_token: string;
       refresh_token: string;
       expires_in: number;
+      locationId?: string;
     };
 
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
         token_encrypted: encrypt(tokens.access_token),
         refresh_token_encrypted: encrypt(tokens.refresh_token),
         token_expires_at: expiresAt,
+        ghl_location_id: tokens.locationId ?? null,
         connected_at: new Date(),
       },
     });

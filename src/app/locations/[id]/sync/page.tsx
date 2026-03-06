@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
@@ -32,8 +32,8 @@ const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 
   QUEUED: 'warning',
 };
 
-export default function SyncPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function SyncPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [loading, setLoading] = useState(true);

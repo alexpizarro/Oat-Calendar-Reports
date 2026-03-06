@@ -53,6 +53,7 @@ export const ConnectLocationSchema = z.object({
   timezone: z.string().default('Australia/Melbourne'),
   authMode: z.enum(['oauth', 'private']).default('private'),
   privateToken: z.string().optional(),
+  ghlLocationId: z.string().optional(),
 });
 
 export type ConnectLocationInput = z.infer<typeof ConnectLocationSchema>;

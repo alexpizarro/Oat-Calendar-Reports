@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { use } from 'react';
 import { useFetch, defaultDateRange } from '@/hooks/use-analytics';
 import { HeatmapChart } from '@/components/charts/heatmap-chart';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,8 +12,8 @@ const SEGMENT_FIELDS = [
   { value: 'source', label: 'Source' },
 ];
 
-export default function InsightsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function InsightsPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [range, setRange] = useState(defaultDateRange);
   const [segmentField, setSegmentField] = useState('email_domain');
   const [drilldownValue, setDrilldownValue] = useState<string | null>(null);

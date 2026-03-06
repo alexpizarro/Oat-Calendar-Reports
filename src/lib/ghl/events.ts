@@ -6,7 +6,6 @@ const WINDOW_DAYS = 14;
 export async function fetchEventsInWindow(
   client: GHLClient,
   calendarId: string,
-  locationId: string,
   windowStart: Date,
   windowEnd: Date,
 ): Promise<GHLCalendarEvent[]> {
@@ -16,9 +15,8 @@ export async function fetchEventsInWindow(
   do {
     const params: Record<string, string> = {
       calendarId,
-      locationId,
-      startTime: windowStart.toISOString(),
-      endTime: windowEnd.toISOString(),
+      startTime: String(windowStart.getTime()),
+      endTime: String(windowEnd.getTime()),
     };
     if (nextPageToken) params['pageToken'] = nextPageToken;
 
@@ -34,7 +32,6 @@ export async function fetchEventsInWindow(
 export async function fetchEventsInRange(
   client: GHLClient,
   calendarId: string,
-  locationId: string,
   startDate: Date,
   endDate: Date,
   onWindow?: (events: GHLCalendarEvent[], windowStart: Date, windowEnd: Date) => Promise<void>,
@@ -45,7 +42,7 @@ export async function fetchEventsInRange(
 
   while (windowStart < endDate) {
     const windowEnd = new Date(Math.min(windowStart.getTime() + windowMs, endDate.getTime()));
-    const events = await fetchEventsInWindow(client, calendarId, locationId, windowStart, windowEnd);
+    const events = await fetchEventsInWindow(client, calendarId, windowStart, windowEnd);
 
     if (onWindow) {
       await onWindow(events, windowStart, windowEnd);
